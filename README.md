@@ -16,7 +16,7 @@ The project aims to demonstrate the implementation of essential ecommerce functi
 ## Tech Stack
 ### Frontend:
 - HTML,CSS
-- JavaScript, TypeScript (ReactJS)
+- JavaScript(ReactJS)
 - Bootstrap
 - DaisyUI (styling components for TailwindCSS)
 - TailwindCSS (for styling)
