@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
@@ -14,16 +16,24 @@ import com.example.demo.API.DTO.UserDTO;
 import com.example.demo.API.Entity.User;
 import com.example.demo.API.Mapper.UserMapper;
 import com.example.demo.API.Repository.UserRepository;
+import com.example.demo.API.auth.Service.JwtService;
+import com.example.demo.API.auth.Service.RefreshTokenService;
+import com.example.demo.API.utils.AuthResponse;
+import com.example.demo.API.utils.LogInRquest;
 
-
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
+    private final AuthenticationManager authenticationManager;
     public List<UserDTO> findAll(){
         List<User> users = userRepository.findAll();
         return userMapper.toDto(users);
@@ -36,18 +46,31 @@ public class UserService {
                       .findFirst()
                       .orElse(null);  
     }
-    public UserDTO login(String username, String password){
-        List<User> users = userRepository.findAll();
-        List<UserDTO> userDTO = userMapper.toDto(users);
-        return userDTO.stream()
-                      .filter(user -> user.getUsername().equals(username) && user.getPassword().equals(password))
-                      .findFirst()
-                      .orElse(null);
+    public AuthResponse login(LogInRquest logInRquest){
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(logInRquest.getUsername(), logInRquest.getPassword())
+        );
+        var user = userRepository.findByUsername(logInRquest.getUsername()).orElseThrow(() -> new IllegalArgumentException("User not found."));
+        var accessToken = jwtService.generateToken(user);
+        var refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
+
+        return AuthResponse.builder()
+                          .accessToken(accessToken)
+                          .refreshToken(refreshToken.getRefreshToken())
+                          .build();
     }
     
-    public void save(UserDTO userDTO){
+    public AuthResponse save(UserDTO userDTO){
         User user = userMapper.toEntity(userDTO);
-        userRepository.save(user);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        User savedUser = userRepository.save(user);
+        var accessToken = jwtService.generateToken(savedUser);
+        var refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
+
+        return AuthResponse.builder()
+                          .accessToken(accessToken)
+                          .refreshToken(refreshToken.getRefreshToken())
+                          .build();
     }
     public void UpdateUser(String username, UserDTO userDTO){
         List<User> users = userRepository.findAll();
@@ -60,7 +83,7 @@ public class UserService {
                     item.setAddress(userDTO.getAddress());
                     item.setEmail(userDTO.getEmail());
                     item.setGender(userDTO.getGender());
-                    item.setPassword(userDTO.getPassword());
+                    item.setPassword(passwordEncoder.encode(userDTO.getPassword()));
                 }
                 return item;
             })

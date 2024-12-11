@@ -17,6 +17,8 @@ function Navbar() {
     LoginData.logout();
     navigate("/"); //liệt
   };
+  const username = LoginData?.username || "Username";
+  const loginState = LoginData?.loginState || false; // Giá trị mặc định là false
   const handleSearch = (event) => {
     event.preventDefault();
     let searchResult = products.filter(
@@ -75,7 +77,7 @@ function Navbar() {
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                   >
-                    <i className="fa fa-user" /> {LoginData.username}
+                    <i className="fa fa-user" /> {username}
                   </a>
                   <ul
                     className="dropdown-menu"
@@ -85,12 +87,12 @@ function Navbar() {
                       <Link
                         className="dropdown-item"
                         to={
-                          LoginData.username === "Username"
+                          username === "Username"
                             ? "/login"
                             : "/profile"
                         }
                       >
-                        <i className="fa fa-user" /> {LoginData.loginState ===
+                        <i className="fa fa-user" /> {loginState ===
                         true ? "Profile" : "Login"}
                       </Link>
                     </li>

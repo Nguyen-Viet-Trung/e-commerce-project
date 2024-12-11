@@ -1,10 +1,12 @@
-import axios from 'axios';
-import React, { useState } from "react";
+import axios from "axios";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-
+import LogInContext from "../context/LogInContext";
 const RegistrationForm = () => {
   const navigate = useNavigate();
+  const setAccessToken = useContext(LogInContext).setAccessToken;
+  const setRefreshToken = useContext(LogInContext).setRefreshToken;
   const [formData, setFormData] = useState({
     fullname: "",
     username: "",
@@ -22,15 +24,19 @@ const RegistrationForm = () => {
   const passwordRegex = /^[a-zA-Z0-9_!@#\$%\^&\*]{6,20}$/;
   const [usernameError, setUsernameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [emailError, setEmailError] = useState("");
 
-  const checkUsernameAvailability = async (username) => {
+  const checkUsernameAvailability = async (username, email) => {
     try {
       const response = await axios.get("http://localhost:8080/api/users");
-      const userExists = response.data.some((user) => user.username === username);
-      return userExists;
+      const userExists = response.data.some(
+        (user) => user.username === username
+      );
+      const emailExists = response.data.some((user) => user.email === email);
+      return { userExists, emailExists }; // Trả về kết quả dưới dạng object
     } catch (error) {
-      console.error("Error checking username availability:", error);
-      return false;
+      console.error("Error checking username and email availability:", error);
+      return { userExists: false, emailExists: false };
     }
   };
 
@@ -45,21 +51,38 @@ const RegistrationForm = () => {
         "Username should be 5-16 characters and can only include letters, numbers."
       );
       return;
-    } else {
-      setUsernameError(""); // Bỏ lỗi regex
     }
 
-    // Kiểm tra trùng tên người dùng
-    const userExists = await checkUsernameAvailability(value);
+    // Kiểm tra tên cấm
+    const forbiddenNames = ["Username", "Guest"];
+    if (forbiddenNames.includes(value)) {
+      setUsernameError(`Username cannot be "${value}"`);
+      return;
+    }
+
+    // Kiểm tra trùng lặp trong cơ sở dữ liệu
+    const { userExists } = await checkUsernameAvailability(
+      value,
+      formData.email
+    );
     if (userExists) {
       setUsernameError("Username already exists, please choose another.");
     } else {
       setUsernameError("");
     }
-    if(formData.username === "Username"){
-      setUsernameError("Username cannot be Username");
-    }else{
-      setUsernameError("");
+  };
+  const handleEmailValidation = async (e) => {
+    const value = e.target.value;
+    setFormData({ ...formData, email: value });
+
+    const { emailExists } = await checkUsernameAvailability(
+      formData.username,
+      value
+    );
+    if (emailExists) {
+      setEmailError("Email already exists, please use a different one.");
+    } else {
+      setEmailError("");
     }
   };
 
@@ -88,16 +111,16 @@ const RegistrationForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (usernameError || passwordError) {
+    if (usernameError || passwordError || emailError) {
       alert("Please correct the errors and try again");
       return;
     }
-    
+
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match");
       return;
     }
-  
+
     try {
       const response = await axios.post("http://localhost:8080/api/users", {
         fullname: formData.fullname,
@@ -107,18 +130,25 @@ const RegistrationForm = () => {
         password: formData.password,
         gender: formData.gender,
         address: formData.address,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
-  
-      if (response.status === 201) {
+
+      if (response.status === 200) {
         console.log("Registration successful:", response.data);
+        const { accessToken, refreshToken } = response.data;
+        setAccessToken(accessToken);
+        setRefreshToken(refreshToken);
+
+        alert("Registeration successful")
         navigate("/");
       }
     } catch (error) {
-      console.error("Registration failed:", error.response ? error.response.data : error.message);
+      console.error(
+        "Registration failed:",
+        error.response ? error.response.data : error.message
+      );
     }
   };
-  
 
   return (
     <div className="container mt-5 mb-5">
@@ -167,9 +197,10 @@ const RegistrationForm = () => {
                   placeholder="Enter your email"
                   name="email"
                   value={formData.email}
-                  onChange={handleChange}
+                  onChange={handleEmailValidation}
                   required
                 />
+                {emailError && <p style={{ color: "red" }}>{emailError}</p>}
               </div>
               <div className="col-md-6">
                 <label className="form-label">Phone Number</label>

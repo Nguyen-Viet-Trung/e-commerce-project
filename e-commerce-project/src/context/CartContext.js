@@ -6,10 +6,12 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const { LoginData } = useContext(LogInContext); // Access the logged-in user's data
-  const { username } = LoginData;
-  const {productAvailable} = useContext(ProductContext);
+  const { productAvailable } = useContext(ProductContext);
   const [numberOfProduct, setNumberOfProduct] = useState(0);
   const [cartItem, setCartItem] = useState([]);
+
+  // Đảm bảo LoginData tồn tại và có `username`
+  const username = LoginData?.username || "Username";
   const cartKey = username === "Username" ? "cart_guest" : `cart_${username}`;
 
   // Load cart from localStorage for the logged-in user when the component mounts

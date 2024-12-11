@@ -3,13 +3,14 @@ import json
 import pickle
 import numpy as np
 import tensorflow as tf
-
+import os
 import nltk
 from nltk.stem import WordNetLemmatizer
 
 lemmatizer = WordNetLemmatizer()
-
-intents = json.loads(open('Scripts\Chatbot\intents.json', encoding="utf8").read())
+relative_path = "Scripts\Chatbot\intents.json"
+absolute_path = os.path.abspath(relative_path)
+intents = json.loads(open(absolute_path, encoding="utf8").read())
 
 words = []
 classes = []
@@ -19,14 +20,14 @@ ignoreLetters = ['?', '!', '.', ',']
 for intent in intents['intents']:
     for pattern in intent['patterns']:
         wordList = nltk.word_tokenize(pattern)
-        words.extend(wordList)
+        # Không áp dụng lemmatizer cho từ bắt đầu bằng ký tự viết hoa (có khả năng là tên riêng)
+        words.extend([word for word in wordList])
         documents.append((wordList, intent['tag']))
         if intent['tag'] not in classes:
             classes.append(intent['tag'])
 
-
-words = [lemmatizer.lemmatize(word) for word in words if word not in ignoreLetters]
-
+# Loại bỏ ignoreLetters nhưng giữ nguyên các từ bắt đầu bằng chữ hoa
+words = [word.lower() if word not in ignoreLetters else word for word in words]
 words = sorted(set(words))
 
 classes = sorted(set(classes))

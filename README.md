@@ -8,7 +8,8 @@ The project aims to demonstrate the implementation of essential ecommerce functi
 - Checkout gateway with PayOS
 - Admin Dashboard
 - Chatbot implementation
-- Change password ( if user forgot ) through OTP, Email
+- Password recovery through OTP and Email.
+- Secure authentication using JWT (Access Token, Refresh Token).
 - Simple Pagination
 - Easy to manage shopping cart
 - Shopping cart, login state saved through session with localStorage
@@ -21,7 +22,8 @@ The project aims to demonstrate the implementation of essential ecommerce functi
 - TailwindCSS (for styling)
 - Recharts, sweetalert2
 ### Backend:
-- For chatbot: Flask, NLTK, Tensorflow, Keras
-- For server: Spring Boot, MySQL
-- For payment gateway integration: PayOS Gateway
+- **For chatbot:** Flask, NLTK, Tensorflow, Keras
+- **For server:** Spring Boot, MySQL
+- **For authentication:** JWT (Access Token, Refresh Token)
+- **For payment gateway integration:** PayOS Gateway
   

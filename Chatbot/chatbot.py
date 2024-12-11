@@ -6,12 +6,14 @@ import nltk
 import math
 from nltk.stem import WordNetLemmatizer
 from keras.models import load_model
-
+import os
+relative_path = "Scripts\Chatbot\intents.json"
+absolute_path = os.path.abspath(relative_path)
 class chatbotAI:
     
     def __init__(self):
         self.lemmatizer = WordNetLemmatizer()
-        self.intents = json.loads(open('Scripts\Chatbot\intents.json', encoding="utf8").read())
+        self.intents = json.loads(open(absolute_path, encoding="utf8").read())
 
         self.words = pickle.load(open('words.pkl', 'rb'))
         self.classes = pickle.load(open('classes.pkl', 'rb'))

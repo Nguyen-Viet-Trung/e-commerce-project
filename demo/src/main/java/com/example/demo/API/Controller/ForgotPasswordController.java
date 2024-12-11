@@ -7,6 +7,7 @@ import java.util.Random;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,10 +28,12 @@ public class ForgotPasswordController {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final ForgotPasswordRepository forgotPasswordRepository;
-    public ForgotPasswordController(UserRepository userRepository, EmailService emailService, ForgotPasswordRepository forgotPasswordRepository) {
+    private final PasswordEncoder passwordEncoder;
+    public ForgotPasswordController(UserRepository userRepository, EmailService emailService, ForgotPasswordRepository forgotPasswordRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.emailService = emailService;
         this.forgotPasswordRepository = forgotPasswordRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     @PostMapping("/verifyEmail/{email}")
     public ResponseEntity<String> verifyEmail(@PathVariable String email) {
@@ -42,7 +45,7 @@ public class ForgotPasswordController {
         Integer otp = otpGenerator();
         MailBody mailBody = MailBody.builder()
         .to(email)
-        .text("This is the OTP for your forgot password request in Trung Tech: " + otp)
+        .text("This is the OTP for your forgot password request in Trung Tech: " + otp + "\n" +"Please note, the OTP is valid only for the next 5 minutes.")
         .subject("OTP for forgot password")
         .build();
 
@@ -74,7 +77,7 @@ public class ForgotPasswordController {
         if(!Objects.equals(changePassword.password(), changePassword.repeatPassword())){
             return new ResponseEntity<>("Please enter the password right", HttpStatus.EXPECTATION_FAILED);
         }
-        userRepository.updatePassword(changePassword.password(), email);
+        userRepository.updatePassword(passwordEncoder.encode(changePassword.password()), email);
         return ResponseEntity.ok("Password changed successfully");
     }
     private Integer otpGenerator(){

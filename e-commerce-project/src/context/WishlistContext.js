@@ -7,7 +7,7 @@ export function WishlistProvider({ children }) {
   const [numberOfItem, setNumberOfItem] = useState(0);
   const [wishlist, setWishlist] = useState([]);
   const { LoginData } = useContext(LogInContext);
-  const { username } = LoginData;
+  const username = LoginData?.username || "Username";
 
   const wishListKey = `wishlist_${username || "guest"}`;
   let storedList = [];

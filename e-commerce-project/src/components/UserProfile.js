@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import LogInContext from '../context/LogInContext';
 const UserProfile = () => {
   const [userDetail, setUserDetail] = useState([]);
-  const {LoginData} = useContext(LogInContext)
+  const {LoginData, axiosInstance} = useContext(LogInContext)
   const fetchUser = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/users/${LoginData.username}`);
+      const response = await axiosInstance.get(`/api/users/profile/${LoginData.username}`);
       setUserDetail(response.data); 
     } catch (error) {
       console.log("Error fetching data: ", error);
@@ -15,10 +15,10 @@ const UserProfile = () => {
   };
 
   useEffect(() => {
-    if (LoginData.username) { 
+    if (LoginData.username, LoginData.accessToken) {
       fetchUser();
     }
-  }, [LoginData.username]); 
+  }, [LoginData.username, LoginData.accessToken]); 
   const [resetPassword, setResetPassword] = useState({
     newPassword: '',
     confirmPassword: ''
@@ -36,7 +36,7 @@ const UserProfile = () => {
     if (!usernameError && !newPasswordError && !confirmPasswordError) {
       if(confirmPasswordError !== null){
         try{
-          await axios.put(`http://localhost:8080/api/users/${LoginData.username}`,userDetail);
+          await axiosInstance.put(`/api/users/update/${LoginData.username}`,userDetail);
           navigate("/")
         }catch(error){
           console.log(error);

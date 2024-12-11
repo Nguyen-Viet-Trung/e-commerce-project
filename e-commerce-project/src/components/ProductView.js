@@ -128,7 +128,7 @@ const ProductView = ({ id }) => {
         <div className="row">
           <div className="col-md-5 mt-3">
             <div className="bg-white border">
-              <img src={currentImage} className="w-100" alt={product.name} />
+              <img src={currentImage} className="w-100" style={{maxHeight:"400px"}} alt={product.name} />
             </div>
             <div className="d-flex justify-content-center mt-3">
               {[product.image, product.image1, product.image2].map(
